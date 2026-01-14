@@ -13,19 +13,19 @@ This is not just a Raspian Docker image, it's a full ARM based Raspberry Pi virt
 ## Usage
 
 ```
-docker run -it ghcr.io/lspm-pkg/better-dockerpi
+docker run -it ghcr.io/lspm-pkg/dockerpi
 ```
 
 By default all filesystem changes will be lost on shutdown. You can persist filesystem changes between reboots by mounting the `/sdcard` volume on your host:
 
 ```
-docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/better-dockerpi
+docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dockerpi
 ```
 
 If you have a specific image you want to mount you can mount it at `/sdcard/filesystem.img`:
 
 ```
-docker run -it -v /2019-09-26-raspbian-buster-lite.img:/sdcard/filesystem.img lukechilds/dockerpi
+docker run -it -v /2019-09-26-raspbian-buster-lite.img:/sdcard/filesystem.img ghcr.io/lspm-pkg/dockerpi
 ```
 
 If you only want to mount your own image, you can build a much slimmer VM only Docker container that doesn't contain the Raspbian filesystem image by git cloning this repo and then editing the Dockerfile and removing the `COPY`.
