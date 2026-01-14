@@ -30,6 +30,8 @@ docker run -it -v /2019-09-26-raspbian-buster-lite.img:/sdcard/filesystem.img lu
 
 If you only want to mount your own image, you can build a much slimmer VM only Docker container that doesn't contain the Raspbian filesystem image by git cloning this repo and then editing the Dockerfile and removing the `COPY`.
 
+If you want to use VNC, currnetly it is experimental and doesn't work as of the time of making this repoisitory.
+
 ## Which machines are supported?
 
 By default a Raspberry Pi 3B is virtualised,
