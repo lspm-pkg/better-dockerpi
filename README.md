@@ -32,6 +32,8 @@ If you only want to mount your own image, you can build a much slimmer VM only D
 
 If you want to use VNC, currnetly it is experimental and doesn't work as of the time of making this repoisitory.
 
+You can make a `issue` or a `pull` request if you want, these greatly help us and you.
+
 ## Which machines are supported?
 
 By default a Raspberry Pi 3B is virtualised,
