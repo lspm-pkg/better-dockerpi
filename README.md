@@ -2,9 +2,7 @@
 	<img width="256" src="media/logo.svg">
 </div>
 
-# dockerpi
-
-[![Docker Image Size](https://badgen.net/docker/size/lukechilds/dockerpi/latest/amd64?icon=docker&label=lukechilds/dockerpi)](https://hub.docker.com/r/lukechilds/dockerpi/tags)
+# better-dockerpi
 
 > A Virtualised Raspberry Pi inside a Docker image
 
