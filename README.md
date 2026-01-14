@@ -125,9 +125,9 @@ pi@raspberrypi:~$
 Build this image yourself by checking out this repo, `cd` ing into it and running:
 
 ```
-docker build -t lukechilds/dockerpi .
+docker build -t dpi .
 ```
 
 ## Credit
 
-Thanks to luke childs's dockerpi repo for the inspiration.
+Thanks to luke childs's dockerpi repo for the inspiration. (https://github.com/lukechilds/dockerpi)
