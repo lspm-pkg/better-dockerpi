@@ -23,7 +23,7 @@ VOLUME /sdcard
 EXPOSE 5022
 EXPOSE 5900
 
-RUN wget https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2022-09-07/2022-09-06-raspios-bullseye-arm64-lite.img.xz -O /filesystem.xz && unxz /filesystem.xz
+RUN wget https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2022-09-07/2022-09-06-raspios-bullseye-arm64-lite.img.xz -O /filesystem.img.xz && unxz /filesystem.img.xz
 
 # As for the /filesystem.img, this was only for development purposes.
 #COPY ./FILESYSTEM.img /filesystem.img
