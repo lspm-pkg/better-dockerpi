@@ -36,6 +36,7 @@ You can also increase the Image disk size by adding a size at the end in GB. not
 ```
 docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dockerpi pi3 128
 ```
+Then when inside, run `sudo raspi-config` and go into andvanced settings and expand file system; reboot.
 
 If you only want to mount your own image, you can build a much slimmer VM only Docker container that doesn't contain the Raspbian filesystem image by git cloning this repo and then editing the Dockerfile and removing the `COPY`.
 
