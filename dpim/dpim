@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+set -e
+BASE_IMG="ghcr.io/lspm-pkg/dpi:latest"
+PID_DIR="$HOME/.dpi/pids"
+VOL_BASE="/dpi"
+DEFAULT_MODEL="pi3"
+mkdir -p "$PID_DIR"
+cmd="$1"
+name_raw="$2"
+storage="$3"
+pi_exists() {
+    docker ps -a --format '{{.Names}}' | grep -Fxq "$1"
+}
+running_pi_exists() {
+    docker ps --format '{{.Names}}' | grep -Fxq "${1}_run"
+}
+is_numeric() {
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+valid_name() {
+    [[ "$1" =~ ^[A-Za-z0-9-]+$ ]]
+}
+create_pi() {
+    name="$1"
+    storage="$2"
+    if [ -z "$name" ]; then
+        echo "Error: Pi name is required."
+        return 1
+    fi
+    if ! valid_name "$name"; then
+        echo "Error: Pi name may only contain A-Z, a-z, 0-9, and '-'."
+        return 1
+    fi
+    if [ -z "$storage" ]; then
+        storage=4
+    fi
+    if ! is_numeric "$storage"; then
+        echo "Error: Storage must be numeric (GB)."
+        return 1
+    fi
+    if pi_exists "$name"; then
+        echo "Pi '$name' already exists."
+        return 1
+    fi
+    vol="$VOL_BASE/$name"
+    mkdir -p "$vol"
+    docker create -it -v "$vol:/sdcard" --name "$name" "$BASE_IMG" "$DEFAULT_MODEL" "$storage"
+}
+remove_pi() {
+    name="$1"
+    if [ -z "$name" ]; then
+        echo "Error: Pi name is required."
+        return 1
+    fi
+    if ! valid_name "$name"; then
+        echo "Error: Pi name may only contain A-Z, a-z, 0-9, and '-'."
+        return 1
+    fi
+    if ! pi_exists "$name"; then
+        echo "Pi '$name' does not exist."
+        return 1
+    fi
+    docker rm -f "$name" 2>/dev/null || true
+    rm -rf "$VOL_BASE/$name"
+    rm -f "$PID_DIR/$name.pid"
+}
+start_pi() {
+    name="$1"
+    if [ -z "$name" ]; then
+        echo "Error: Pi name is required."
+        return 1
+    fi
+    if ! valid_name "$name"; then
+        echo "Error: Pi name may only contain A-Z, a-z, 0-9, and '-'."
+        return 1
+    fi
+    if ! pi_exists "$name"; then
+        echo "Pi '$name' does not exist."
+        return 1
+    fi
+    if running_pi_exists "$name"; then
+        echo "Pi '$name' already has an active Serial/GPIO session."
+        return 1
+    fi
+    vol="$VOL_BASE/$name"
+    machine=$(docker inspect -f '{{.Config.Cmd}}' "$name" | tr -d '[]')
+    screen -dmS "dpi_$name" bash -c "docker run -it --rm --name ${name}_run -v $vol:/sdcard $BASE_IMG $machine"
+    pid=$(screen -ls | grep "dpi_$name" | awk -F . '{print $1}' | tr -dc '0-9')
+    echo "$pid" > "$PID_DIR/$name.pid"
+}
+stop_pi() {
+    name="$1"
+    if [ -z "$name" ]; then
+        echo "Error: Pi name is required."
+        return 1
+    fi
+    if ! valid_name "$name"; then
+        echo "Error: Pi name may only contain A-Z, a-z, 0-9, and '-'."
+        return 1
+    fi
+    if ! running_pi_exists "$name"; then
+        echo "Pi '$name' has no active Serial/GPIO session."
+        return 1
+    fi
+    docker kill "${name}_run" 2>/dev/null || true
+    pid_file="$PID_DIR/$name.pid"
+    if [ -f "$pid_file" ]; then
+        kill "$(cat "$pid_file")" 2>/dev/null || true
+        rm -f "$pid_file"
+    fi
+}
+console_pi() {
+    name="$1"
+    if [ -z "$name" ]; then
+        echo "Error: Pi name is required."
+        return 1
+    fi
+    if ! valid_name "$name"; then
+        echo "Error: Pi name may only contain A-Z, a-z, 0-9, and '-'."
+        return 1
+    fi
+    pid_file="$PID_DIR/$name.pid"
+    if [ ! -f "$pid_file" ]; then
+        echo "No active Serial/GPIO session for Pi '$name'."
+        return 1
+    fi
+    screen -r "dpi_$name"
+}
+list_pis() {
+    echo "Raspberry Pi servers"
+    for dir in /dpi/*/; do
+        [ -d "$dir" ] || continue
+        size=$(du -sh "$dir" 2>/dev/null | awk '{print $1}')
+        name=$(basename "$dir")
+        echo "$size  ($name)"
+    done
+}
+show_help() {
+    cat << EOF
+Usage:
+  <command> [arguments]
+
+Commands:
+  create <name> [storage]   Create a Raspberry Pi server (name: A-Z,a-z,0-9,- storage: numeric GB default 4)
+  start <name>              Start a Serial/GPIO session
+  stop <name>               Stop the Serial/GPIO session
+  console <name>            Attach to Serial/GPIO session
+  rm <name>                 Remove a Raspberry Pi
+  ls                        List Raspberry Pi servers
+
+Examples:
+  create production
+  create production 8
+  start production
+  console production
+  stop production
+  rm production
+EOF
+}
+case "$cmd" in
+    create) create_pi "$name_raw" "$storage" ;;
+    rm) remove_pi "$name_raw" ;;
+    start) start_pi "$name_raw" ;;
+    stop) stop_pi "$name_raw" ;;
+    console) console_pi "$name_raw" ;;
+    ls) list_pis ;;
+    *) show_help; exit 1 ;;
+esac
