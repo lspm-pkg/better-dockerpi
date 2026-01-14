@@ -1,0 +1,116 @@
+#!/bin/bash
+export DPI_SHELL=1
+export HISTFILE=/dev/null
+unset HISTSIZE
+unset HISTFILESIZE
+BOLD=$'\e[1m'
+RESET=$'\e[0m'
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+YELLOW=$'\e[33m'
+BLUE=$'\e[34m'
+MAGENTA=$'\e[35m'
+CYAN=$'\e[36m'
+WHITE=$'\e[37m'
+USER_NAME="${USER:-$(whoami)}"
+print_banner() {
+    clear
+    if command -v figlet >/dev/null 2>&1; then
+        printf "%b\n" "${CYAN}${BOLD}"
+        figlet -f slant pi-mgr || true
+        printf "%b\n" "${RESET}"
+    else
+        printf "%b\n" "${CYAN}${BOLD}Raspberry Pi Server Interface${RESET}\n"
+    fi
+    printf "%b\n" "${GREEN}Raspberry Pi Server Interface${RESET}"
+    printf "%b\n" "${YELLOW}Commands: create, start, stop, console, rm, ls, help, clear, exit${RESET}"
+    printf "%b\n" "${MAGENTA}Detach from Serial/GPIO console with: Ctrl+A then D${RESET}"
+    printf "%b\n" "${YELLOW}To leave this shell type: exit${RESET}"
+    printf "\n"
+}
+PROMPT_NO_ESC="${BOLD}${BLUE}${USER_NAME}${RESET} ${WHITE}~${RESET} ${MAGENTA}%${RESET} "
+dpi_cmd() {
+    /usr/bin/dpi "$@"
+}
+help_cmd() {
+    /usr/bin/dpi
+}
+handle_sigint() {
+    clear
+    print_banner
+    printf "%b" "$PROMPT_NO_ESC"
+}
+trap 'handle_sigint' SIGINT
+print_banner
+while true; do
+    read -e -p "$(printf "%b" "$PROMPT_NO_ESC")" -r line || { printf "\n"; break; }
+    line="${line%%$'\r'}"
+    line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -z "$line" ] && continue
+    IFS=' ' read -r -a toks <<< "$line"
+    cmd="${toks[0]}"
+    case "$cmd" in
+        exit|quit|logout)
+            printf "\n%b\n" "${RED}Disconnecting Raspberry Pi control shell${RESET}"
+            break
+            ;;
+        help)
+            help_cmd
+            continue
+            ;;
+        list|ls)
+            if [ "${#toks[@]}" -ne 1 ]; then
+                printf "%b\n" "${YELLOW}Usage: list${RESET}"
+                continue
+            fi
+            dpi_cmd ls
+            continue
+            ;;
+        clear)
+            print_banner
+            continue
+            ;;
+        create)
+            name="${toks[1]}"
+            storage="${toks[2]}"
+            if [ -z "$name" ]; then
+                printf "%b\n" "${YELLOW}Usage: create <NAME> [STORAGE]${RESET}"
+                continue
+            fi
+            if ! [[ "$name" =~ ^[A-Za-z0-9-]+$ ]]; then
+                printf "%b\n" "${RED}Invalid name. Only A-Z, a-z, 0-9 and - allowed.${RESET}"
+                continue
+            fi
+            if [ -n "$storage" ] && ! [[ "$storage" =~ ^[0-9]+$ ]]; then
+                printf "%b\n" "${RED}Storage must be numeric (GB).${RESET}"
+                continue
+            fi
+            if [ "${#toks[@]}" -gt 3 ]; then
+                printf "%b\n" "${YELLOW}Usage: create <NAME> [STORAGE]${RESET}"
+                continue
+            fi
+            dpi_cmd create "$name" "$storage"
+            continue
+            ;;
+        start|stop|console|rm)
+            name="${toks[1]}"
+            if [ -z "$name" ]; then
+                printf "%b\n" "${YELLOW}Usage: $cmd <NAME>${RESET}"
+                continue
+            fi
+            if [ "${#toks[@]}" -ne 2 ]; then
+                printf "%b\n" "${YELLOW}Usage: $cmd <NAME>${RESET}"
+                continue
+            fi
+            if ! [[ "$name" =~ ^[A-Za-z0-9-]+$ ]]; then
+                printf "%b\n" "${RED}Invalid syntax.${RESET}"
+                continue
+            fi
+            dpi_cmd "$cmd" "$name"
+            continue
+            ;;
+        *)
+            continue
+            ;;
+    esac
+done
