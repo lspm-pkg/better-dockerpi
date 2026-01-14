@@ -20,6 +20,8 @@ And when you get to `root@(none):/# ` run `passwd pi`, and then `exec /sbin/init
 
 Credentials are username `pi` and the password you set.
 
+Then when inside, run `sudo raspi-config` and go into andvanced settings and expand file system; reboot.
+
 By default all filesystem changes will be lost on shutdown. You can persist filesystem changes between reboots by mounting the `/sdcard` volume on your host:
 
 ```
