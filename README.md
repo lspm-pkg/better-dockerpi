@@ -13,7 +13,7 @@ This is not just a Raspian Docker image, it's a full ARM based Raspberry Pi virt
 ## Usage
 
 ```
-docker run -it ghcr.io/lspm-pkg/dockerpi
+docker run -it ghcr.io/lspm-pkg/dpi
 ```
 
 And when you get to `root@(none):/# ` run `passwd pi`, and then `exec /sbin/init`.
@@ -25,18 +25,18 @@ Then when inside, run `sudo raspi-config` and go into andvanced settings and exp
 By default all filesystem changes will be lost on shutdown. You can persist filesystem changes between reboots by mounting the `/sdcard` volume on your host:
 
 ```
-docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dockerpi
+docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dpi
 ```
 
 If you have a specific image you want to mount you can mount it at `/sdcard/filesystem.img`:
 
 ```
-docker run -it -v /2019-09-26-raspbian-buster-lite.img:/sdcard/filesystem.img ghcr.io/lspm-pkg/dockerpi
+docker run -it -v /2019-09-26-raspbian-buster-lite.img:/sdcard/filesystem.img ghcr.io/lspm-pkg/dpi
 ```
 
 You can also increase the Image disk size by adding a size at the end in GB. note this wants the model first.
 ```
-docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dockerpi pi3 128
+docker run -it -v $HOME/.dockerpi:/sdcard ghcr.io/lspm-pkg/dpi pi3 128
 ```
 Then when inside, run `sudo raspi-config` and go into andvanced settings and expand file system; reboot.
 
